@@ -3,10 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions";
 
+// Models with STRONG visual understanding (not just OCR) —
+// needed to detect checked boxes, circled answers, filled bubbles, etc.
 const VISION_MODELS = [
-  "qwen/qwen2.5-vl-72b-instruct",
-  "deepseek/deepseek-vl2",
-  "thudm/glm-4v-plus",
+  "google/gemini-2.0-flash-001",
+  "openai/gpt-4o",
+  "anthropic/claude-3.5-sonnet",
 ];
 
 interface GradeDetail {
@@ -166,17 +168,26 @@ export async function POST(request: NextRequest) {
       )
       .join("\n");
 
-    const systemPrompt = `You are an expert OCR and document analysis AI specialized in detecting student answers on scanned multiple choice exam papers (QCM). You detect which answer option each student selected by looking for checked checkboxes, filled circles, circled letters, crossed options, underlined options, or handwritten letters.`;
+    const systemPrompt = `You are an expert at VISUALLY analyzing scanned exam papers (QCM / multiple choice). Your task is NOT to read text — it is to LOOK at the image and detect visual marks that indicate which answer a student selected. Focus on the VISUAL appearance of the document: look for pen marks, filled shapes, circled items, crossed items, and any hand-drawn marks.`;
 
-    const userPrompt = `This is a student's completed exam copy for a QCM with the following questions:
+    const userPrompt = `IMPORTANT: This task requires VISUAL analysis, not text extraction. Look at the IMAGE carefully.
+
+This is a student's completed QCM exam. The questions are:
 
 ${questionsSummary}
 
-For each question, detect which answer the student selected. Look for:
-- Checked checkboxes (✓, ✗, X marks)
-- Filled or circled bubbles/circles
-- Circled or underlined letters
-- Handwritten letters next to questions
+Your job: For EACH question, VISUALLY detect which answer option the student marked. 
+
+Look carefully at the image for these VISUAL indicators next to each option:
+- ✓ Checkmarks or tick marks drawn in or next to a box/circle
+- X marks or crosses drawn in or next to a box/circle  
+- Filled/darkened circles or bubbles (vs empty ones)
+- Circled letters or circled option text
+- Underlined option letters
+- Handwritten letters written next to question numbers
+- Any pen/pencil mark that distinguishes one option from the others
+
+Compare marked vs unmarked options — the one that looks DIFFERENT (has an extra mark) is the selected answer.
 
 Return a JSON object with this EXACT structure:
 {
@@ -188,7 +199,7 @@ Return a JSON object with this EXACT structure:
 }
 
 Rules:
-- Use the exact question numbers listed above (Q1, Q2, etc.)
+- Use the exact question numbers (Q1, Q2, etc.)
 - Use the exact option labels (A, B, C, D, etc.)
 - If you truly cannot determine an answer for a question, use ""
 - Return ONLY the JSON, no other text`;
