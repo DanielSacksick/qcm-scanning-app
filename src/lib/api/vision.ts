@@ -61,7 +61,7 @@ export async function callVisionAPI(
           ],
         },
       ],
-      max_tokens: 4096,
+      max_tokens: 16384,
       temperature: 0.1,
     }),
   });

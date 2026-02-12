@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQCMStore } from "@/lib/store/qcmStore";
 import { StepIndicator } from "@/components/layout/StepIndicator";
@@ -18,6 +18,8 @@ export default function QCMUploadPage() {
     uploadedFiles,
     setUploadedFiles,
     setExtractedQuestions,
+    setAnswerKey,
+    setGradingResults,
     setIsLoading,
     setLoadingMessage,
     isLoading,
@@ -87,6 +89,9 @@ export default function QCMUploadPage() {
       }
 
       const data = await res.json();
+      // Reset old barème & results when new extraction happens
+      setAnswerKey({});
+      setGradingResults([]);
       setExtractedQuestions(data.questions);
       router.push("/portal/qcm/review");
     } catch (err: unknown) {
@@ -234,11 +239,13 @@ function FileCard({
   const isPdf = file.type === "application/pdf";
   const [preview, setPreview] = useState<string | null>(null);
 
-  if (!isPdf && !preview) {
+  useEffect(() => {
+    if (isPdf || preview) return;
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
-  }
+    return () => reader.abort();
+  }, [file, isPdf, preview]);
 
   return (
     <Card
