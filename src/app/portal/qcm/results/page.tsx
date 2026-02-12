@@ -186,12 +186,12 @@ export default function QCMResultsPage() {
                     <TableHead className="w-[90px] text-center text-xs">
                       Score
                     </TableHead>
-                    {extractedQuestions.map((q) => (
+                    {extractedQuestions.map((_, i) => (
                       <TableHead
-                        key={q.number}
+                        key={i}
                         className="text-center w-14 text-xs"
                       >
-                        Q{q.number}
+                        Q{i + 1}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -211,16 +211,16 @@ export default function QCMResultsPage() {
                             {result.score}/{result.total}
                           </Badge>
                         </TableCell>
-                        {extractedQuestions.map((q) => {
-                          const d = result.details[`Q${q.number}`];
+                        {extractedQuestions.map((_, i) => {
+                          const d = result.details[`Q${i + 1}`];
                           if (!d)
                             return (
-                              <TableCell key={q.number} className="text-center">
+                              <TableCell key={i} className="text-center">
                                 —
                               </TableCell>
                             );
                           return (
-                            <TableCell key={q.number} className="text-center">
+                            <TableCell key={i} className="text-center">
                               <div className="flex items-center justify-center gap-0.5">
                                 {d.isCorrect ? (
                                   <CheckCircle2 className="h-3.5 w-3.5 text-[hsl(var(--success))]" />

@@ -10,7 +10,7 @@ export function generateExcelBuffer(
     "Score",
     "Total",
     "Pourcentage",
-    ...questions.map((q) => `Q${q.number}`),
+    ...questions.map((_, i) => `Q${i + 1}`),
   ];
 
   const rows = results.map((r) => {
@@ -20,8 +20,8 @@ export function generateExcelBuffer(
       r.total,
       `${((r.score / r.total) * 100).toFixed(1)}%`,
     ];
-    questions.forEach((q) => {
-      const detail = r.details[`Q${q.number}`];
+    questions.forEach((_, i) => {
+      const detail = r.details[`Q${i + 1}`];
       if (detail) {
         row.push(
           detail.isCorrect
@@ -40,8 +40,8 @@ export function generateExcelBuffer(
     "",
     "",
     "",
-    ...questions.map((q) => {
-      const detail = results[0]?.details[`Q${q.number}`];
+    ...questions.map((_, i) => {
+      const detail = results[0]?.details[`Q${i + 1}`];
       return detail ? detail.correct : "";
     }),
   ];

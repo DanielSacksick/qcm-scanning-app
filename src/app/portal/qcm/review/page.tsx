@@ -38,12 +38,12 @@ export default function QCMReviewPage() {
     isLoading,
   } = useQCMStore();
 
-  // Init answer key
+  // Init answer key — use sequential 1-based index as unique ID to avoid duplicate question numbers
   useEffect(() => {
     if (extractedQuestions.length > 0 && Object.keys(answerKey).length === 0) {
       const key: Record<string, string> = {};
-      extractedQuestions.forEach((q) => {
-        key[`Q${q.number}`] = "";
+      extractedQuestions.forEach((_, i) => {
+        key[`Q${i + 1}`] = "";
       });
       setAnswerKey(key);
     }
@@ -60,7 +60,7 @@ export default function QCMReviewPage() {
 
   const handleGrade = async () => {
     const missing = extractedQuestions.filter(
-      (q) => !answerKey[`Q${q.number}`]
+      (_, i) => !answerKey[`Q${i + 1}`]
     );
     if (missing.length > 0) {
       toast({
@@ -137,10 +137,11 @@ export default function QCMReviewPage() {
           <div className="space-y-3">
             {extractedQuestions.map((q, i) => (
               <QuestionCard
-                key={q.number}
+                key={i}
                 question={q}
-                selectedAnswer={answerKey[`Q${q.number}`] || ""}
-                onSelectAnswer={(l) => updateAnswerKey(`Q${q.number}`, l)}
+                questionIndex={i}
+                selectedAnswer={answerKey[`Q${i + 1}`] || ""}
+                onSelectAnswer={(l) => updateAnswerKey(`Q${i + 1}`, l)}
                 onUpdateQuestion={(upd) => updateQuestion(i, upd)}
               />
             ))}
@@ -171,11 +172,11 @@ export default function QCMReviewPage() {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-1.5">
-                {extractedQuestions.map((q) => {
-                  const answer = answerKey[`Q${q.number}`];
+                {extractedQuestions.map((q, i) => {
+                  const answer = answerKey[`Q${i + 1}`];
                   return (
                     <div
-                      key={q.number}
+                      key={i}
                       className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors ${
                         answer
                           ? "bg-[hsl(var(--success))]/10 border border-[hsl(var(--success))]/20"
@@ -183,7 +184,7 @@ export default function QCMReviewPage() {
                       }`}
                     >
                       <span className="font-medium text-muted-foreground">
-                        Q{q.number}
+                        Q{i + 1}
                       </span>
                       {answer ? (
                         <Badge className="bg-[hsl(var(--success))] hover:bg-[hsl(var(--success))] text-white text-[10px] h-5">
@@ -233,11 +234,13 @@ export default function QCMReviewPage() {
 
 function QuestionCard({
   question,
+  questionIndex,
   selectedAnswer,
   onSelectAnswer,
   onUpdateQuestion,
 }: {
   question: Question;
+  questionIndex: number;
   selectedAnswer: string;
   onSelectAnswer: (label: string) => void;
   onUpdateQuestion: (q: Question) => void;
@@ -277,7 +280,7 @@ function QuestionCard({
             variant="outline"
             className="shrink-0 mt-0.5 font-bold text-[hsl(var(--primary))] border-[hsl(var(--primary))]/20 bg-[hsl(var(--primary))]/5 text-xs"
           >
-            Q{question.number}
+            Q{questionIndex + 1}
           </Badge>
           {editingText ? (
             <div className="flex-1 flex gap-2">

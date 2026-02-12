@@ -2,10 +2,11 @@ import type { Question, AnswerKey, StudentResult, GradeDetail } from "@/lib/type
 import { fileToBase64, tryModels, parseJSON, getModels } from "./vision";
 
 function buildPrompts(questions: Question[]) {
+  // Use sequential 1-based numbering to guarantee unique question IDs
   const questionsSummary = questions
     .map(
-      (q) =>
-        `Q${q.number}: ${q.text} — Options: ${q.options.map((o) => o.label).join(", ")}`
+      (q, i) =>
+        `Q${i + 1}: ${q.text} — Options: ${q.options.map((o) => o.label).join(", ")}`
     )
     .join("\n");
 
