@@ -4,9 +4,9 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 const VISION_MODELS_OCR = [
+  "google/gemini-2.5-flash",
   "qwen/qwen2.5-vl-72b-instruct",
   "deepseek/deepseek-vl2",
-  "thudm/glm-4v-plus",
 ];
 
 const VISION_MODELS_GRADING = [

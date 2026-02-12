@@ -1,5 +1,5 @@
 const VALID_USERNAME = "prof";
-const VALID_PASSWORD = "qcm2025";
+const VALID_PASSWORD = "qcm2026";
 const AUTH_KEY = "oa_portal_auth";
 
 export function login(username: string, password: string): boolean {
