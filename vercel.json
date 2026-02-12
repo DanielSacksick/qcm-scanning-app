@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "src/app/api/extract/route.ts": {
+      "maxDuration": 120
+    },
+    "src/app/api/grade/route.ts": {
+      "maxDuration": 300
+    }
+  }
+}
