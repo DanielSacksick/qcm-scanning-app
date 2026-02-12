@@ -1,59 +1,36 @@
 import { create } from "zustand";
+import type { Question, StudentResult, AnswerKey } from "@/lib/types/qcm";
 
-export interface QuestionOption {
-  label: string;
-  text: string;
-}
-
-export interface Question {
-  number: number;
-  text: string;
-  options: QuestionOption[];
-}
-
-export interface GradeDetail {
-  given: string;
-  correct: string;
-  isCorrect: boolean;
-}
-
-export interface StudentResult {
-  filename: string;
-  score: number;
-  total: number;
-  details: Record<string, GradeDetail>;
-}
-
-export interface AppState {
-  // Upload
+export interface QCMState {
+  // Files
   uploadedFiles: File[];
   setUploadedFiles: (files: File[]) => void;
 
-  // Extraction (QCM structure only)
+  // Extraction
   extractedQuestions: Question[];
   setExtractedQuestions: (questions: Question[]) => void;
   updateQuestion: (index: number, question: Question) => void;
 
   // Answer key (barème)
-  answerKey: Record<string, string>;
-  setAnswerKey: (key: Record<string, string>) => void;
+  answerKey: AnswerKey;
+  setAnswerKey: (key: AnswerKey) => void;
   updateAnswerKey: (questionKey: string, answer: string) => void;
 
-  // Grading results
+  // Grading
   gradingResults: StudentResult[];
   setGradingResults: (results: StudentResult[]) => void;
 
-  // Loading
+  // UI
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   loadingMessage: string;
   setLoadingMessage: (message: string) => void;
 
   // Reset
-  resetAll: () => void;
+  resetSession: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useQCMStore = create<QCMState>((set) => ({
   uploadedFiles: [],
   setUploadedFiles: (files) => set({ uploadedFiles: files }),
 
@@ -81,7 +58,7 @@ export const useAppStore = create<AppState>((set) => ({
   loadingMessage: "",
   setLoadingMessage: (message) => set({ loadingMessage: message }),
 
-  resetAll: () =>
+  resetSession: () =>
     set({
       uploadedFiles: [],
       extractedQuestions: [],

@@ -1,6 +1,6 @@
 const VALID_USERNAME = "prof";
 const VALID_PASSWORD = "qcm2025";
-const AUTH_KEY = "qcm_auth";
+const AUTH_KEY = "oa_portal_auth";
 
 export function login(username: string, password: string): boolean {
   if (username === VALID_USERNAME && password === VALID_PASSWORD) {

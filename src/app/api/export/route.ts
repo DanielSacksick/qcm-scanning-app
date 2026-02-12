@@ -1,113 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as XLSX from "xlsx";
-
-interface GradeDetail {
-  given: string;
-  correct: string;
-  isCorrect: boolean;
-}
-
-interface StudentResult {
-  filename: string;
-  score: number;
-  total: number;
-  details: Record<string, GradeDetail>;
-}
-
-interface ExtractedQuestion {
-  number: number;
-  text: string;
-}
+import { generateExcelBuffer } from "@/lib/api/export";
+import type { StudentResult, Question } from "@/lib/types/qcm";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { results, questions } = body as {
+    const { results, questions } = (await request.json()) as {
       results: StudentResult[];
-      questions: ExtractedQuestion[];
+      questions: Question[];
     };
 
-    if (!results || results.length === 0) {
+    if (!results?.length) {
       return NextResponse.json(
         { error: "Aucun résultat à exporter." },
         { status: 400 }
       );
     }
 
-    // Build header row
-    const headers = [
-      "Fichier",
-      "Score",
-      "Total",
-      "Pourcentage",
-      ...questions.map((q) => `Q${q.number}`),
-    ];
+    const buf = generateExcelBuffer(results, questions);
+    const uint8 = new Uint8Array(buf);
 
-    // Build data rows
-    const rows = results.map((r) => {
-      const row: (string | number)[] = [
-        r.filename,
-        r.score,
-        r.total,
-        `${((r.score / r.total) * 100).toFixed(1)}%`,
-      ];
-      questions.forEach((q) => {
-        const detail = r.details[`Q${q.number}`];
-        if (detail) {
-          row.push(
-            detail.isCorrect
-              ? `${detail.given} ✓`
-              : `${detail.given || "—"} ✗ (${detail.correct})`
-          );
-        } else {
-          row.push("—");
-        }
-      });
-      return row;
-    });
-
-    // Add answer key row
-    const answerKeyRow: (string | number)[] = [
-      "BARÈME",
-      "",
-      "",
-      "",
-      ...questions.map((q) => {
-        const detail = results[0]?.details[`Q${q.number}`];
-        return detail ? detail.correct : "";
-      }),
-    ];
-
-    // Add stats row
-    const avgScore =
-      results.reduce((sum, r) => sum + r.score, 0) / results.length;
-    const statsRow: (string | number)[] = [
-      "MOYENNE",
-      avgScore.toFixed(1),
-      results[0]?.total || 0,
-      `${((avgScore / (results[0]?.total || 1)) * 100).toFixed(1)}%`,
-    ];
-
-    // Create workbook
-    const wsData = [headers, answerKeyRow, ...rows, [], statsRow];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    // Set column widths
-    ws["!cols"] = [
-      { wch: 30 }, // Filename
-      { wch: 8 }, // Score
-      { wch: 8 }, // Total
-      { wch: 12 }, // Percentage
-      ...questions.map(() => ({ wch: 15 })),
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Résultats QCM");
-
-    // Generate buffer
-    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-
-    return new NextResponse(buf, {
+    return new NextResponse(uint8, {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -115,7 +27,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (err) {
-    console.error("Export API error:", err);
+    console.error("[api/export]", err);
     return NextResponse.json(
       { error: "Erreur lors de l'export Excel." },
       { status: 500 }
