@@ -5,6 +5,9 @@
     },
     "src/app/api/grade/route.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/export-pdf/route.ts": {
+      "maxDuration": 300
     }
   }
 }

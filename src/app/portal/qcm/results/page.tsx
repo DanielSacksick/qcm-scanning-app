@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQCMStore } from "@/lib/store/qcmStore";
 import { StepIndicator } from "@/components/layout/StepIndicator";
@@ -19,6 +19,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import {
   Download,
+  FileCheck,
+  Loader2,
   RefreshCw,
   Trophy,
   TrendingUp,
@@ -30,7 +32,9 @@ import {
 export default function QCMResultsPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { gradingResults, extractedQuestions, resetSession } = useQCMStore();
+  const { gradingResults, extractedQuestions, uploadedFiles, resetSession } =
+    useQCMStore();
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     if (gradingResults.length === 0) {
@@ -82,6 +86,62 @@ export default function QCMResultsPage() {
     }
   };
 
+  const handleExportPdf = async () => {
+    if (uploadedFiles.length === 0) {
+      toast({
+        title: "Fichiers manquants",
+        description:
+          "Les copies originales ne sont plus en mémoire. Relancez une session.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setExportingPdf(true);
+    try {
+      const formData = new FormData();
+      uploadedFiles.forEach((f) => formData.append("files", f));
+      formData.append("results", JSON.stringify(gradingResults));
+      formData.append("questions", JSON.stringify(extractedQuestions));
+
+      const res = await fetch("/api/export-pdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || "Export PDF échoué.");
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `copies_corrigees_${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export PDF réussi",
+        description: "Les copies corrigées ont été téléchargées.",
+      });
+    } catch (err) {
+      toast({
+        title: "Erreur d'export PDF",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Impossible de générer les PDFs annotés.",
+        variant: "destructive",
+      });
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   const handleNewSession = () => {
     resetSession();
     router.push("/portal/qcm/upload");
@@ -124,6 +184,20 @@ export default function QCMResultsPage() {
           >
             <Download className="h-3.5 w-3.5" />
             Exporter Excel
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExportPdf}
+            disabled={exportingPdf || uploadedFiles.length === 0}
+            className="gap-1.5 rounded-lg font-semibold"
+          >
+            {exportingPdf ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <FileCheck className="h-3.5 w-3.5" />
+            )}
+            {exportingPdf ? "Annotation…" : "Exporter PDF corrigé"}
           </Button>
         </div>
       </div>

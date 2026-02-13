@@ -43,3 +43,18 @@ export interface ExportInput {
   results: StudentResult[];
   questions: Question[];
 }
+
+// ─── Annotated PDF Export Types ─────────────────────
+
+export interface BoundingBox {
+  x: number; // left edge, % of page width  (0–100)
+  y: number; // top edge, % of page height  (0–100)
+  w: number; // width, % of page width
+  h: number; // height, % of page height
+}
+
+export interface AnswerLocations {
+  [questionKey: string]: {
+    [optionLabel: string]: BoundingBox;
+  };
+}

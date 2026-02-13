@@ -15,12 +15,22 @@ const VISION_MODELS_GRADING = [
   "anthropic/claude-3.5-sonnet",
 ];
 
+// Spatial / coordinate tasks (bounding box, point location on a page)
+// GPT-4o and Claude are significantly better at precise spatial reasoning.
+const VISION_MODELS_SPATIAL = [
+  "openai/gpt-4o",
+  "anthropic/claude-3.5-sonnet",
+  "google/gemini-2.5-flash",
+];
+
 export function getApiKey(): string | undefined {
   return OPENROUTER_API_KEY;
 }
 
-export function getModels(purpose: "ocr" | "grading"): string[] {
-  return purpose === "ocr" ? VISION_MODELS_OCR : VISION_MODELS_GRADING;
+export function getModels(purpose: "ocr" | "grading" | "spatial"): string[] {
+  if (purpose === "ocr") return VISION_MODELS_OCR;
+  if (purpose === "spatial") return VISION_MODELS_SPATIAL;
+  return VISION_MODELS_GRADING;
 }
 
 export async function fileToBase64(
